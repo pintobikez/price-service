@@ -1,0 +1,4 @@
+package: github.com/dafiti/go-instrument
+import:
+- package: github.com/newrelic/go-agent
+  version: ^1.9.0
