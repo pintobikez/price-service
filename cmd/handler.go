@@ -108,7 +108,7 @@ func Handler(c *cli.Context) error {
 			AllowMethods: []string{echo.PUT, echo.OPTIONS, echo.HEAD},
 		},
 	))
-	e.GET("/product/:id", apiStruct.GetProduct(), mw.CORSWithConfig(
+	e.GET("/price/:id", apiStruct.GetProduct(), mw.CORSWithConfig(
 		mw.CORSConfig{
 			AllowOrigins: []string{"*"},
 			AllowMethods: []string{echo.GET, echo.OPTIONS, echo.HEAD},

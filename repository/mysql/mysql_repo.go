@@ -6,20 +6,17 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	gen "github.com/pintobikez/price-service/api/structures"
 	cnfs "github.com/pintobikez/price-service/config/structures"
-	"log"
+	st "github.com/pintobikez/price-service/repository/structures"
 	"strconv"
-	"time"
 )
 
-const (
-	IsEmpty = "% is empty"
-)
-
+//Client Mysql client struct
 type Client struct {
 	config *cnfs.DatabaseConfig
 	db     *sql.DB
 }
 
+//New creates a new Mysql Client
 func New(cnfg *cnfs.DatabaseConfig) (*Client, error) {
 	if cnfg == nil {
 		return nil, fmt.Errorf("Client configuration not loaded")
@@ -48,6 +45,7 @@ func (r *Client) Disconnect() {
 	r.db.Close()
 }
 
+//GetChannels retreives a map off all defined price channels
 func (r *Client) GetChannels() (map[string]int64, error) {
 
 	ret := make(map[string]int64)
@@ -95,17 +93,16 @@ func (r *Client) FindProduct(ID string) (*gen.Product, error) {
 		var (
 			id_ string
 			p   float64
-			sp  float64
-			spf time.Time
-			spt time.Time
+			sp  st.NullFloat64
+			spf st.NullTime
+			spt st.NullTime
 			ch  string
-			upd time.Time
+			upd st.NullTime
 			cid int64
 		)
-		log.Println("fasdas")
+
 		err = rows.Scan(&id_, &ch, &p, &sp, &spf, &spt, &upd, &cid)
 		if err != nil {
-			log.Println("%s", err.Error())
 			return resp, fmt.Errorf("Error reading rows: %s", err.Error())
 		}
 
@@ -117,7 +114,6 @@ func (r *Client) FindProduct(ID string) (*gen.Product, error) {
 		aux.Channel = ch
 		aux.UpdatedAt = upd
 		aux.ChannelID = cid
-		log.Printf("%v\n", aux)
 		resp.Prices = append(resp.Prices, aux)
 
 		resp.ID = id_
@@ -132,7 +128,7 @@ func (r *Client) FindProduct(ID string) (*gen.Product, error) {
 	return resp, nil
 }
 
-// Updates the given Product
+//PutProduct Insert/Updates the given Product
 func (r *Client) PutProduct(s *gen.Product) (int64, error) {
 
 	var af int64 = 0
@@ -145,7 +141,7 @@ func (r *Client) PutProduct(s *gen.Product) (int64, error) {
 	}
 
 	for _, p := range s.Prices {
-		res, err := stmt.Exec(s.ID, p.ChannelID, p.Price, p.SpecialPrice, p.SpecialFrom, p.SpecialTo, p.Price, p.SpecialPrice, p.SpecialFrom, p.SpecialTo)
+		res, err := stmt.Exec(s.ID, p.ChannelID, p.Price, p.SpecialPrice.Float64, p.SpecialFrom.Time, p.SpecialTo.Time, p.Price, p.SpecialPrice.Float64, p.SpecialFrom.Time, p.SpecialTo.Time)
 		if err != nil {
 			stmt.Close()
 			return 0, fmt.Errorf("Could not insert/update Product %s", s.ID)
@@ -161,7 +157,7 @@ func (r *Client) PutProduct(s *gen.Product) (int64, error) {
 	return af, nil
 }
 
-// Health Endpoint of the Client
+//Health Endpoint of the Client
 func (r *Client) Health() error {
 
 	str, err := r.buildStringConnection()
@@ -178,8 +174,12 @@ func (r *Client) Health() error {
 	return nil
 }
 
+//buildStringConnection creates the mysql connection string
 func (r *Client) buildStringConnection() (string, error) {
 	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+
+	IsEmpty := "% is empty"
+
 	if r.config == nil {
 		return "", fmt.Errorf("Client configuration not loaded")
 	}
@@ -201,7 +201,7 @@ func (r *Client) buildStringConnection() (string, error) {
 
 	stringConn := r.config.Driver.User + ":" + r.config.Driver.Pw
 	stringConn += "@tcp(" + r.config.Driver.Host + ":" + strconv.Itoa(r.config.Driver.Port) + ")"
-	stringConn += "/" + r.config.Driver.Schema + "?charset=utf8"
+	stringConn += "/" + r.config.Driver.Schema + "?charset=utf8&parseTime=true"
 
 	return stringConn, nil
 }

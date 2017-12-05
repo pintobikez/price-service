@@ -113,15 +113,15 @@ func (a *API) validateProduct(s *strut.Product, ch map[string]int64) map[string]
 		if el.Price <= 0 {
 			ret["price"] = "invalid value"
 		}
-		//if el.SpecialFrom == nil && el.SpecialPrice > 0 {
-		//	ret["specialFrom"] = "special date from must be supplied"
-		//}
-		//if el.SpecialFrom != nil && el.SpecialPrice <= 0 {
-		//	ret["specialPrice"] = "special price must be supplied"
-		//}
-		//if el.SpecialFrom != nil && el.SpecialPrice > 0 && el.SpecialTo != nil && el.SpecialFrom.After(el.SpecialTo) {
-		//	ret["specialDateTo"] = "special date to must be after special date from"
-		//}
+		if !el.SpecialFrom.Valid && el.SpecialPrice.Valid && el.SpecialPrice.Float64 > 0 {
+			ret["specialFrom"] = "special date from must be supplied"
+		}
+		if el.SpecialFrom.Valid && el.SpecialPrice.Valid && el.SpecialPrice.Float64 <= 0 {
+			ret["specialPrice"] = "special price must be supplied"
+		}
+		if el.SpecialFrom.Valid && el.SpecialPrice.Float64 > 0 && el.SpecialTo.Valid && el.SpecialFrom.Time.After(el.SpecialTo.Time) {
+			ret["specialDateTo"] = "special date to must be after special date from"
+		}
 		cid, ok := ch[el.Channel]
 		if !ok {
 			ret["channel"] = "is not a valid value"

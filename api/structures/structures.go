@@ -1,6 +1,6 @@
 package structures
 
-import "time"
+import st "github.com/pintobikez/price-service/repository/structures"
 
 type Product struct {
 	ID     string           `json:"id"`
@@ -13,13 +13,13 @@ type Channel struct {
 }
 
 type ProductPrices struct {
-	Price        float64   `json:"price"`
-	SpecialPrice float64   `json:"specialPrice"`
-	SpecialFrom  time.Time `json:"specialFrom"`
-	SpecialTo    time.Time `json:"specialTo"`
-	Channel      string    `json:"channel"`
-	UpdatedAt    time.Time `json:"updatedAt"`
-	ChannelID    int64
+	Price        float64        `json:"price"`
+	SpecialPrice st.NullFloat64 `json:"specialPrice"`
+	SpecialFrom  st.NullTime    `json:"specialFrom"`
+	SpecialTo    st.NullTime    `json:"specialTo"`
+	Channel      string         `json:"channel"`
+	UpdatedAt    st.NullTime    `json:"updatedAt"`
+	ChannelID    int64          `json:"-"`
 }
 
 type HealthStatus struct {
