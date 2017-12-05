@@ -21,13 +21,9 @@ type (
 	}
 
 	ErrContent struct {
-		Code    int    `json:"code"`
-		Message string `json:"message"`
-	}
-
-	ErrResponseValidation struct {
-		Type   string           `json:"error_type"`
-		Errors []*ErrValidation `json:"errors"`
+		Code    int              `json:"code"`
+		Message string           `json:"message"`
+		Errors  []*ErrValidation `json:"errors, omitempty"`
 	}
 
 	ErrValidation struct {
@@ -61,7 +57,7 @@ func Error(err error, c echo.Context) {
 		if c.Request().Method == echo.HEAD {
 			c.NoContent(code)
 		} else {
-			c.JSON(code, &ErrResponse{ErrContent{code, msg}})
+			c.JSON(code, &ErrResponse{ErrContent{code, msg, nil}})
 		}
 	}
 }

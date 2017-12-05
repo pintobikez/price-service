@@ -52,7 +52,7 @@ func (a *API) GetProduct() echo.HandlerFunc {
 		ProductResponse, err := a.rp.FindProduct(c.Param("id"))
 
 		if err != nil {
-			return c.JSON(http.StatusNotFound, &ErrResponse{ErrContent{ErrorCodeProductNotFound, err.Error()}})
+			return c.JSON(http.StatusNotFound, &ErrResponse{ErrContent{ErrorCodeProductNotFound, err.Error(), nil}})
 		}
 
 		return c.JSON(http.StatusOK, ProductResponse)
@@ -66,13 +66,13 @@ func (a *API) PutProduct() echo.HandlerFunc {
 		var s *strut.Product
 
 		if err := c.Bind(&s); err != nil {
-			return c.JSON(http.StatusBadRequest, &ErrResponse{ErrContent{ErrorCodeWrongJsonFormat, err.Error()}})
+			return c.JSON(http.StatusBadRequest, &ErrResponse{ErrContent{ErrorCodeWrongJsonFormat, err.Error(), nil}})
 		}
 
 		//load all channels from db
 		chs, err := a.rp.GetChannels()
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{ErrorCodeNoChannels, err.Error()}})
+			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{ErrorCodeNoChannels, err.Error(), nil}})
 		}
 
 		// check if the json is valid
@@ -82,17 +82,17 @@ func (a *API) PutProduct() echo.HandlerFunc {
 
 		af, err := a.rp.PutProduct(s)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{ErrorCodeStoringContent, err.Error()}})
+			return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{ErrorCodeStoringContent, err.Error(), nil}})
 		}
 
 		if af > 0 { //publish message
 			ProductResponse, err := a.rp.FindProduct(s.ID)
 			if err != nil {
-				return c.JSON(http.StatusNotFound, &ErrResponse{ErrContent{ErrorCodeProductNotFound, fmt.Sprintf(ProductNotFound, s.ID)}})
+				return c.JSON(http.StatusNotFound, &ErrResponse{ErrContent{ErrorCodeProductNotFound, fmt.Sprintf(ProductNotFound, s.ID), nil}})
 			}
 
 			if err := a.pb.Publish(ProductResponse); err != nil {
-				return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{ErrorCodePublishingMessage, err.Error()}})
+				return c.JSON(http.StatusInternalServerError, &ErrResponse{ErrContent{ErrorCodePublishingMessage, err.Error(), nil}})
 			}
 		}
 
@@ -109,6 +109,10 @@ func (a *API) validateProduct(s *strut.Product, ch map[string]int64) map[string]
 		ret["id"] = "is empty"
 	}
 
+	if len(s.Prices) == 0 {
+		ret["prices"] = "is empty"
+	}
+
 	for _, el := range s.Prices {
 		if el.Price <= 0 {
 			ret["price"] = "invalid value"
@@ -120,7 +124,7 @@ func (a *API) validateProduct(s *strut.Product, ch map[string]int64) map[string]
 			ret["specialPrice"] = "special price must be supplied"
 		}
 		if el.SpecialFrom.Valid && el.SpecialPrice.Float64 > 0 && el.SpecialTo.Valid && el.SpecialFrom.Time.After(el.SpecialTo.Time) {
-			ret["specialDateTo"] = "special date to must be after special date from"
+			ret["specialTo"] = "special date to must be after special date from"
 		}
 		cid, ok := ch[el.Channel]
 		if !ok {
@@ -134,14 +138,11 @@ func (a *API) validateProduct(s *strut.Product, ch map[string]int64) map[string]
 }
 
 //buildErrorResponse builds a validation error reponse strut
-func buildErrorResponse(err map[string]string) *ErrResponseValidation {
+func buildErrorResponse(err map[string]string) *ErrResponse {
 
-	ret := &ErrResponseValidation{Type: "validation", Errors: make([]*ErrValidation, 0, len(err))}
-	i := 0
-
+	ret := &ErrResponse{ErrContent{Code: ErrorCodeInvalidContent, Message: "Validation errors", Errors: make([]*ErrValidation, 0, len(err))}}
 	for k, v := range err {
-		ret.Errors[i] = &ErrValidation{Field: k, Message: v}
-		i++
+		ret.Error.Errors = append(ret.Error.Errors, &ErrValidation{Field: k, Message: v})
 	}
 
 	return ret

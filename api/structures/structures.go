@@ -14,11 +14,11 @@ type Channel struct {
 
 type ProductPrices struct {
 	Price        float64        `json:"price"`
-	SpecialPrice st.NullFloat64 `json:"specialPrice"`
-	SpecialFrom  st.NullTime    `json:"specialFrom"`
-	SpecialTo    st.NullTime    `json:"specialTo"`
+	SpecialPrice st.NullFloat64 `json:"specialPrice, omitempty"`
+	SpecialFrom  st.NullTime    `json:"specialFrom, omitempty"`
+	SpecialTo    st.NullTime    `json:"specialTo, omitempty"`
 	Channel      string         `json:"channel"`
-	UpdatedAt    st.NullTime    `json:"updatedAt"`
+	UpdatedAt    st.NullTime    `json:"updatedAt, omitempty"`
 	ChannelID    int64          `json:"-"`
 }
 
