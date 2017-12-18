@@ -12,7 +12,28 @@ services:
       networks:
             - default_network_name
 
-    stock:
+    rabbit-price:
+      image: "rabbitmq:3-management"
+      hostname: "rabbit-price"
+      environment:
+        RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+        RABBITMQ_DEFAULT_USER: "guest"
+        RABBITMQ_DEFAULT_PASS: "guest"
+        RABBITMQ_DEFAULT_VHOST: "/"
+      ports:
+        - "15672:15672"
+        - "5672:5672"
+      labels:
+        NAME: "rabbit-price"
+      tty: true
+      networks:
+            - default_network_name
+      volumes:
+         - ./dockerconfig:/etc/rabbitmq
+         - ./dockerconfig:/opt/rabbitmq:ro
+      command:  bash -c "sleep 10; rabbitmq-server;"
+
+    price:
       image: price-service-docker
       ports:
         - 8000:8000

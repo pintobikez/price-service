@@ -77,7 +77,7 @@ func (a *API) PutProduct() echo.HandlerFunc {
 
 		// check if the json is valid
 		if err := a.validateProduct(s, chs); len(err) > 0 {
-			return c.JSON(http.StatusBadRequest, buildErrorResponse(err))
+			return c.JSON(http.StatusBadRequest, buildValidationResponse(err))
 		}
 
 		af, err := a.rp.PutProduct(s)
@@ -137,8 +137,8 @@ func (a *API) validateProduct(s *strut.Product, ch map[string]int64) map[string]
 	return ret
 }
 
-//buildErrorResponse builds a validation error reponse strut
-func buildErrorResponse(err map[string]string) *ErrResponse {
+//buildValidationResponse builds a validation error reponse strut
+func buildValidationResponse(err map[string]string) *ErrResponse {
 
 	ret := &ErrResponse{ErrContent{Code: ErrorCodeInvalidContent, Message: "Validation errors", Errors: make([]*ErrValidation, 0, len(err))}}
 	for k, v := range err {

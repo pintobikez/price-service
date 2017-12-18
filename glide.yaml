@@ -1,9 +1,5 @@
 package: github.com/pintobikez/price-service
 import:
-- package: github.com/stretchr/testify
-  version: ^1.1.4
-  subpackages:
-  - assert
 - package: gopkg.in/yaml.v2
 - package: gopkg.in/urfave/cli.v1
   version: ^1.20.0
@@ -16,10 +12,14 @@ import:
 - package: github.com/labstack/echo
   version: ^3.2.1
   subpackages:
-  - middleware
+    - middleware
 - package: github.com/labstack/gommon
   version: ^0.2.1
   subpackages:
     - log
     - color
 - package: github.com/streadway/amqp
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+    - assert
